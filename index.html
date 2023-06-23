@@ -105,7 +105,7 @@ cocoSsd.load().then(model => {
                 counter.textContent = `People: ${personCount}`;
 
                 // Check if the person count exceeds the threshold
-                if (personCount > 5) {
+                if (personCount > 3) {
                     modal.style.display = 'block';
                 } else {
                     modal.style.display = 'none';
