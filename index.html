@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <title>software, who protect from accident.</title>
+    <title>software who protect from accident</title>
     <style>
         #video {
             width: 100%;
@@ -15,25 +15,38 @@
             font-size: 24px;
         }
         footer {
-     background-color: #333;
-     color: #fff;
-     padding: 10px;
-     background-size: 100%;
-}
-footer a {
-    padding: 5px;
-    margin: 5px;
-    color: white;
-    text-decoration: none;
-}
-h1.header{
-    background-color: white;
-    color: #333;
-} 
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+        background-size: 100%;
+        }
+        footer a {
+        padding: 5px;
+        margin: 5px;
+        color: white;
+        text-decoration: none;
+        }
+        div.header{ 
+        background-color: #333;
+        }
+        h1.header1{
+        color: #fff;
+        text-align: center;
+        }
+        #alertText{
+        background-color: #333;
+        color: #fff;
+        border-radius: 17px; 
+        border: 0px solid rgb(0, 0, 0); 
+        box-shadow: rgba(0, 0, 0, 0.2) 5px 5px 5px; 
+        }
+
     </style>
 </head>
 <body>
-    <h1 class="header">protection from accident</h1>
+    <div class="header">
+    <h1 class="header1">protection from accident</h1>
+    </div>
     <video id="video" autoplay></video>
     <p id="counter">People: 0</p>
     <p id="alertText"></p>
@@ -108,7 +121,7 @@ cocoSsd.load().then(model => {
 
                 // Check if the person count exceeds the threshold
                 if (personCount > 1) {
-                    alertText.innerHTML = 'Alert: STOP!';
+                    alertText.innerHTML = 'Alert: Too many people detected!';
                 } else {
                     alertText.innerHTML = '';
                 }
