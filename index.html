@@ -1,78 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Person Counter</title>
+    <style>
+        #video {
+            width: 100%;
+            height: auto;
+        }
+        #counter {
+            font-size: 24px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-  <div>Teachable Machine Image Model - p5.js and ml5.js</div>
-  <script src="https://cdn.jsdelivr.net/npm/p5@latest/lib/p5.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/p5@latest/lib/addons/p5.dom.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ml5@latest/dist/ml5.min.js"></script>
-  <script type="text/javascript">
-    // Classifier Variable
-    let classifier;
-    // Model URL
-    let imageModelURL = './my_model/';
-    
-    // Video
-    let video;
-    let flippedVideo;
-    // To store the classification
-    let label = "";
-  
-    // Load the model first
-    function preload() {
-      classifier = ml5.imageClassifier(imageModelURL + 'model.json');
-    }
-  
-    function setup() {
-      createCanvas(320, 260);
-      // Create the video
-      video = createCapture(VIDEO);
-      video.size(320, 240);
-      video.hide();
-  
-      flippedVideo = ml5.flipImage(video);
-      // Start classifying
-      classifyVideo();
-    }
-  
-    function draw() {
-      background(0);
-      // Draw the video
-      image(flippedVideo, 0, 0);
-  
-      // Draw the label
-      fill(255);
-      textSize(16);
-      textAlign(CENTER);
-      text(label, width / 2, height - 4);
-    }
-  
-    // Get a prediction for the current video frame
-    function classifyVideo() {
-      flippedVideo = ml5.flipImage(video)
-      classifier.classify(flippedVideo, gotResult);
-      flippedVideo.remove();
-  
-    }
-  
-    // When we get a result
-    function gotResult(error, results) {
-      // If there is an error
-      if (error) {
-        console.error(error);
-        return;
-      }
-      // The results are in an array ordered by confidence.
-      // console.log(results[0]);
-      label = results[0].label;
-      // Classifiy again!
-      classifyVideo();
-    }
-  </script>
+    <h1>Person Counter</h1>
+    <video id="video" autoplay></video>
+    <p id="counter">People: 0</p>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <h2>Alert!</h2>
+            <p>Too many people detected!</p>
+            <button id="closeModal">Close</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script src="script.js"></script>
+    <script>
+        // Get the video, counter, and modal elements
+const video = document.getElementById('video');
+const counter = document.getElementById('counter');
+const modal = document.getElementById('myModal');
+const closeModalBtn = document.getElementById('closeModal');
+
+// Load the person detection model
+cocoSsd.load().then(model => {
+    // Start the camera stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            video.srcObject = stream;
+        })
+        .catch(function(error) {
+            console.error('Error accessing the camera: ', error);
+        });
+
+    // Detect people in each frame
+    video.addEventListener('play', function() {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        let personCount = 0;
+
+        function detectPeople() {
+            // Draw the current frame on the canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Detect objects in the frame
+            model.detect(canvas).then(function(predictions) {
+                // Filter the predictions to keep only people
+                const people = predictions.filter(prediction => prediction.class === 'person');
+
+                // Update the person count
+                personCount = people.length;
+
+                // Draw bounding boxes around the detected people
+                context.lineWidth = 2;
+                context.font = '18px Arial';
+                context.fillStyle = '#FF0000';
+                context.fillText(`People: ${personCount}`, 10, 30);
+
+                for (let i = 0; i < people.length; i++) {
+                    const person = people[i];
+                    context.beginPath();
+                    context.rect(person.bbox[0], person.bbox[1], person.bbox[2], person.bbox[3]);
+                    context.strokeStyle = '#FF0000';
+                    context.fillStyle = '#FF0000';
+                    context.stroke();
+                    context.fillText('Person', person.bbox[0], person.bbox[1] > 10 ? person.bbox[1] - 5 : 10);
+                }
+
+                // Update the counter element
+                counter.textContent = `People: ${personCount}`;
+
+                // Check if the person count exceeds the threshold
+                if (personCount > 5) {
+                    modal.style.display = 'block';
+                } else {
+                    modal.style.display = 'none';
+                }
+
+                // Call the detectPeople function again for the next frame
+                requestAnimationFrame(detectPeople);
+            });
+        }
+
+        // Start detecting people
+        detectPeople();
+    });
+});
+
+// Close the modal when the "Close" button is clicked
+closeModalBtn.addEventListener('click', function() {
+    modal.style.display = 'none';
+});
+
+    </script>
 </body>
 </html>
